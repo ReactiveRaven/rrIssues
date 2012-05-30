@@ -1,7 +1,6 @@
 {
-  "name": "My First Extension",
+  "name": "rrIssues",
   "version": "1.0",
-  "manifest_version": 2,
   "description": "The first extension that I made.",
   "browser_action": {
     "default_icon": "icon.png",
@@ -12,8 +11,8 @@
     "page": "background.html"
   },
   "permissions": [
-    "http://*.github.com/*",
-    "https://*.github.com/*",
+    "http://*.github.com/",
+    "https://*.github.com/",
     "notifications"
   ],
   "web_accessible_resources": [
@@ -27,6 +26,5 @@
       "js": ["oauth2/oauth2_inject.js"],
       "run_at": "document_start"
     }
-  ],
-  "content_security_policy": "default-src 'none'; style-src 'self'; script-src 'self'; connect-src https://maps.googleapis.com; img-src https://maps.google.com"
+  ]
 }
