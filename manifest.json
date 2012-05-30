@@ -2,11 +2,6 @@
   "name": "rrIssues",
   "version": "1.0",
   "description": "The first extension that I made.",
-  "browser_action": {
-    "default_icon": "icon.png",
-    "default_popup": "popup.html",
-    "default_title": "rrIssues"
-  },
   "background": {
     "page": "background.html"
   },
@@ -16,9 +11,22 @@
     "notifications"
   ],
   "web_accessible_resources": [
-    "trafficlight_red.png",
-    "trafficlight_yellow.png",
-    "trafficlight_green.png"
+    "images/trafficlight_green.png",
+    "images/trafficlight_red.png",
+    "images/trafficlight_yellow.png",
+    "images/trafficlight_blue.png",
+    "images/exclamation_blue.png",
+    "images/exclamation_yellow.png",
+    "images/exclamation_green.png",
+    "images/exclamation_red.png",
+    "images/calendar_blue.png",
+    "images/calendar_green.png",
+    "images/calendar_yellow.png",
+    "images/calendar_red.png",
+    "images/tag_blue.png",
+    "images/tag_green.png",
+    "images/tag_yellow.png",
+    "images/tag_red.png"
   ],
   "content_scripts": [
     {
