@@ -12,13 +12,21 @@
     "page": "background.html"
   },
   "permissions": [
-    "http://*.github.com/",
-    "https://*.github.com/",
+    "http://*.github.com/*",
+    "https://*.github.com/*",
     "notifications"
   ],
   "web_accessible_resources": [
     "trafficlight_red.png",
     "trafficlight_yellow.png",
     "trafficlight_green.png"
-  ]
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/robots.txt*"],
+      "js": ["oauth2/oauth2_inject.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "content_security_policy": "default-src 'none'; style-src 'self'; script-src 'self'; connect-src https://maps.googleapis.com; img-src https://maps.google.com"
 }

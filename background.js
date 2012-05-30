@@ -23,10 +23,6 @@ var GitHub = {
           }
           GitHub.lastStatusNotification = window.webkitNotifications.createNotification(icon, "GitHub status changed", "Status is now '" + json.status + "'")
           GitHub.lastStatusNotification.show();
-          var lastStatusNotification = GitHub.lastStatusNotification;
-//          setTimeout(function() {
-//            lastStatusNotification.cancel();
-//          }, 15000);
         }
       }
     });
@@ -34,6 +30,16 @@ var GitHub = {
 }
 
 GitHub.init();
+
+var github = new OAuth2('github', {
+  client_id: 'e0c3e0e9301128108d8b',
+  client_secret: 'a6da7025cbaf83663fcfc062c4d42de8b5aaeeae'
+});
+
+github.authorize(function() {
+  alert("Have auth!");
+});
+
 
 
 
