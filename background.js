@@ -7,6 +7,9 @@ var GitHub = {
       }
     });
   },
+  user: {
+    login: "ReactiveRaven"
+  },
   classifyColour: function (colour) {
     
     var rgb = hexToRgb(colour);
@@ -51,6 +54,44 @@ var GitHub = {
             el.init();
           }
         });
+      }
+    },
+    
+    
+    
+    
+    events: {
+      init: function () {
+        var that = GitHub.checks.events;
+        that.run();
+        setInterval(that.run, 15*1000);
+      },
+      requires: {
+        oauth: true
+      },
+      run: function () {
+        $.ajax({
+          url: "https://api.github.com/repos/coolpink/DFS/issues/events",
+          data: {
+            access_token: GitHub.checks.oauth.connection.getAccessToken()
+          },
+          success: function (data) {
+            console.log(data);
+          }
+        });
+        
+        /*
+        $.ajax(
+          {
+            url: "https://api.github.com/issues",
+            data: {
+              access_token: GitHub.checks.oauth.connection.getAccessToken(),
+              per_page: 100
+            },
+            success: GitHub.checks.myIssues.receive
+          }
+        );
+         */
       }
     },
     
@@ -242,7 +283,7 @@ var GitHub = {
             },
             success: GitHub.checks.myIssues.receive
           }
-        )
+        );
       }
     },
     
