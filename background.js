@@ -91,7 +91,7 @@ var GitHub = {
     myIssues: {
       init: function () {
         GitHub.checks.myIssues.run();
-        setInterval(GitHub.checks.myIssues.run, 15 * 1000);
+        setInterval(GitHub.checks.myIssues.run, 2 * 1000);
       },
       requires: {
         oauth: true
@@ -398,23 +398,6 @@ var GitHub = {
     
     
     
-  },
-  onAuthorised: function () {
-    var token = GitHub.oauth.getAccessToken();
-    $.ajax(
-      {
-        url: "https://api.github.com/user/repos",
-        data: {
-          access_token: token,
-          per_page: 100
-        },
-        success: function (data) {
-          $.each(data, function (i, el) {
-            alert(el.name);
-          });
-        }
-      }
-    );
   }
 }
 
