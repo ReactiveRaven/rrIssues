@@ -63,8 +63,11 @@ var GitHub = {
     events: {
       init: function () {
         var that = GitHub.checks.events;
-        that.run();
-        setInterval(that.run, 15*1000);
+        
+        // disabled for now!
+        
+        //that.run();
+        //setInterval(that.run, 15*1000);
       },
       requires: {
         oauth: true
@@ -79,19 +82,6 @@ var GitHub = {
             console.log(data);
           }
         });
-        
-        /*
-        $.ajax(
-          {
-            url: "https://api.github.com/issues",
-            data: {
-              access_token: GitHub.checks.oauth.connection.getAccessToken(),
-              per_page: 100
-            },
-            success: GitHub.checks.myIssues.receive
-          }
-        );
-         */
       }
     },
     
@@ -110,8 +100,21 @@ var GitHub = {
       receive: function (data) {
         var that = GitHub.checks.myIssues;
         var newIssues = [];
+        var closedIssues = [];
         var reTag = [];
         var reMilestone = [];
+        var reComment = [];
+        
+        var newIssueIds = $.map(data, function (el, i) {
+          return el.id;
+        });
+        $.each(that.issues, function (i, el) {
+          if ($.inArray(el.id, newIssueIds) < 0) {
+            closedIssues.push(el);
+            delete that.issues[el.id];
+          }
+        })
+        
         $.each(data, function (i, el) {
           if (!that.issues[el.id]) {
             that.issues[el.id] = el;
@@ -119,6 +122,10 @@ var GitHub = {
           } else {
             if ((that.issues[el.id].milestone || el.milestone) && (!!that.issues[el.id].milestone != !!el.milestone || that.issues[el.id].milestone.number != el.milestone.number)) {
               reMilestone.push(el);
+            }
+            if (el.comments - that.issues[el.id].comments > 0) {
+              el.oldComments = that.issues[el.id].comments;
+              reComment.push(el);
             }
             var oldLabelNames = $.map(that.issues[el.id].labels, function (item) {
               return item.name;
@@ -160,9 +167,12 @@ var GitHub = {
         });
         
         $.each(newIssues, function (i, el) {
-          var title = "#" + el.number + " in " + el.repository.name;
-          var body = "@" + el.user.login + " -- " + el.title;
-          var icon = el.user.avatar_url;
+          var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
+          var body = "New issue assigned to you";
+          if (el.comments > 0) {
+            body = "Issue reopened or reassigned to you";
+          }
+          var icon = "images/exclamation_red.png";
 
           var notification = window.webkitNotifications.createNotification(icon, title, body);
           notification.onclick = function () {
@@ -177,13 +187,31 @@ var GitHub = {
           }
         });
         
+        $.each(closedIssues, function (i, el) {
+          var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
+          var body = "Issue closed or reassigned";
+          var icon = "images/exclamation_green.png";
+
+          var notification = window.webkitNotifications.createNotification(icon, title, body);
+          notification.onclick = function () {
+            chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number});
+            notification.cancel();
+          }
+          notification.show();
+          notification.ondisplay = function () {
+            setTimeout(function () {
+              notification.cancel();
+            }, 15000);
+          }
+        })
+        
         $.each(reMilestone, function (i, el) {
-          var title = "[" + el.repository.name + "] (---)"; 
-          var body = "Cleared milestone for #" + el.number + " -- " + el.title;
+          var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
+          var body = "Milestone cleared";
           var icon = "images/calendar_blue.png";
           if (el.milestone && el.milestone.title) {
-            title = "[" + el.repository.name + "] " + el.milestone.title; 
-            body = "Added #" + el.number + " -- " + el.title;
+            title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
+            body = "Moved to milestone '" + el.milestone.title + "'";
             if (el.milestone.due_on) {
               var time_until_due = +new Date(el.milestone.due_on) - +new Date();
               if (time_until_due < 0) {
@@ -206,6 +234,38 @@ var GitHub = {
             }, 15 * 1000);
           }
           notification.show();
+        });
+        
+        $.each(reComment, function (i, el) {
+          var numNew = el.comments - el.oldComments;
+          
+          $.ajax({
+            url: el.url + "/comments",
+            data: {
+              access_token: GitHub.checks.oauth.connection.getAccessToken(),
+              per_page: 100
+            },
+            success: function (data) {
+              $.each(data.slice(-numNew), function (j, comment) {
+                var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
+                var body = "@" + comment.user.login + " said: " + comment.body;
+                var icon = comment.user.avatar_url;
+                
+                var notification = window.webkitNotifications.createNotification(icon, title, body);
+                notification.onclick = function () { 
+                  chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number});
+                  notification.cancel();
+                }
+                notification.ondisplay = function () {
+                  setTimeout(function () {
+                    notification.cancel();
+                  }, 15 * 1000);
+                }
+                notification.show();
+              });
+            }
+          });
+          
         });
         
         $.each(reTag, function (i, el) {
@@ -234,8 +294,8 @@ var GitHub = {
           
           $.each(el.labels, function (i, label) {
             if ($.inArray(label.name, tagDiff) >= 0) {
-              var title = "[" + el.repository.name + "] +++ " + label.name;
-              var body = "#" + el.number + " -- " + el.title;
+              var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
+              var body = "ADDED '" + label.name + "'";
               var icon = "images/tag_" + GitHub.classifyColour(label.color) + ".png";
               
               var notification = window.webkitNotifications.createNotification(icon, title, body);
@@ -254,8 +314,8 @@ var GitHub = {
           
           $.each(el.oldLabels, function (i, label) {
             if ($.inArray(label.name, tagDiff) >= 0) {
-              var title = "[" + el.repository.name + "] --- " + label.name;
-              var body = "#" + el.number + " -- " + el.title;
+              var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
+              var body = "REMOVED '" + label.name + "'";
               var icon = "images/tag_" + GitHub.classifyColour(label.color) + ".png";
               
               var notification = window.webkitNotifications.createNotification(icon, title, body);
