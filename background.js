@@ -89,6 +89,7 @@ var GitHub = {
     
     
     myIssues: {
+      firstRun: true,
       init: function () {
         GitHub.checks.myIssues.run();
         setInterval(GitHub.checks.myIssues.run, 2 * 1000);
@@ -118,52 +119,60 @@ var GitHub = {
         $.each(data, function (i, el) {
           if (!that.issues[el.id]) {
             that.issues[el.id] = el;
-            newIssues.push(el);
-          } else {
-            if ((that.issues[el.id].milestone || el.milestone) && (!!that.issues[el.id].milestone != !!el.milestone || that.issues[el.id].milestone.number != el.milestone.number)) {
-              reMilestone.push(el);
+            if (!that.firstRun) {
+              newIssues.push(el);
+              var newEl = $.extend({}, el, true);
+              newEl.milestone = null;
+              newEl.labels = [];
+              that.issues[el.id] = newEl;
             }
-            if (el.comments - that.issues[el.id].comments > 0) {
-              el.oldComments = that.issues[el.id].comments;
-              reComment.push(el);
-            }
-            var oldLabelNames = $.map(that.issues[el.id].labels, function (item) {
-              return item.name;
-            });
-            var newLabelNames = $.map(el.labels, function (item) {
-              return item.name;
-            });
-            var tagDiff = (
+          }
+          
+          if ((that.issues[el.id].milestone || el.milestone) && (!!that.issues[el.id].milestone != !!el.milestone || that.issues[el.id].milestone.number != el.milestone.number)) {
+            reMilestone.push(el);
+          }
+          
+          if (el.comments - that.issues[el.id].comments > 0) {
+            el.oldComments = that.issues[el.id].comments;
+            reComment.push(el);
+          }
+          
+          var oldLabelNames = $.map(that.issues[el.id].labels, function (item) {
+            return item.name;
+          });
+          var newLabelNames = $.map(el.labels, function (item) {
+            return item.name;
+          });
+          var tagDiff = (
+            $.map(
+              $.grep(
+                oldLabelNames, 
+                function (item) {
+                  return $.inArray(item, newLabelNames) < 0;
+                }
+              ), 
+              function (item) { 
+                return "-" + item
+              }
+            ).concat(
               $.map(
                 $.grep(
-                  oldLabelNames, 
-                  function (item) {
-                    return $.inArray(item, newLabelNames) < 0;
+                  newLabelNames, 
+                  function (item) { 
+                    return $.inArray(item, oldLabelNames) < 0;
                   }
                 ), 
                 function (item) { 
-                  return "-" + item
+                  return "+" + item; 
                 }
-              ).concat(
-                $.map(
-                  $.grep(
-                    newLabelNames, 
-                    function (item) { 
-                      return $.inArray(item, oldLabelNames) < 0;
-                    }
-                  ), 
-                  function (item) { 
-                    return "+" + item; 
-                  }
-                )
               )
-            );
-            if (tagDiff.length) {
-              el.oldLabels = that.issues[el.id].labels;
-              reTag.push(el);
-            }
-            that.issues[el.id] = el;
+            )
+          );
+          if (tagDiff.length) {
+            el.oldLabels = that.issues[el.id].labels;
+            reTag.push(el);
           }
+          that.issues[el.id] = el;
         });
         
         $.each(newIssues, function (i, el) {
@@ -253,7 +262,7 @@ var GitHub = {
                 
                 var notification = window.webkitNotifications.createNotification(icon, title, body);
                 notification.onclick = function () { 
-                  chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number});
+                  chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number + "#issuecomment-" + comment.id});
                   notification.cancel();
                 }
                 notification.ondisplay = function () {
@@ -332,6 +341,8 @@ var GitHub = {
             }
           })
         });
+        
+        that.firstRun = false;
       },
       run: function () {
         $.ajax(
