@@ -2,6 +2,7 @@
   "name": "rrIssues",
   "version": "1.0",
   "description": "The first extension that I made.",
+  "options_page": "options.html",
   "background": {
     "page": "background.html"
   },

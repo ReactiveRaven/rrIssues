@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>rrIssues Options</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <link rel="stylesheet" type="text/css" href="bootstrap/css/bootstrap.css">
+    
+    <script src="jquery-1.7.2.min.js"></script>
+    
+    <script src="/bootstrap/js/bootstrap.min.js"></script>
+    <script src="/jqBootstrapValidation/jqBootstrapValidation.js"></script>
+
+    <script src="options.js"></script>
+ 
+    <!--
+      showGitHubStatus: true,
+      
+      showIssuesLabels: true,
+      showIssuesNew: true,
+      showIssuesClosed: true,
+      showIssuesMilestones: true,
+      showIssuesComments: true
+    -->
+  </head>
+  <body>
+    <div class="container">
+      <h1>rrIssues Options</h1>
+      <form class="form-horizontal">
+        <fieldset>
+          <legend>Issues</legend>
+          <div class="control-group">
+            <label class="control-label">Labels</label>
+            <div class="controls">
+              <label class="radio inline">
+                <input type="radio" name="showIssuesLabels" value="true" checked /> Show
+              </label>
+              <label class="radio inline">
+                <input type="radio" name="showIssuesLabels" value="false" /> Hide
+              </label>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">New</label>
+            <div class="controls">
+              <label class="radio inline">
+                <input type="radio" name="showIssuesNew" value="true" checked /> Show
+              </label>
+              <label class="radio inline">
+                <input type="radio" name="showIssuesNew" value="false" /> Hide
+              </label>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Closed</label>
+            <div class="controls">
+              <label class="radio inline">
+                <input type="radio" name="showIssuesClosed" value="true" checked /> Show
+              </label>
+              <label class="radio inline">
+                <input type="radio" name="showIssuesClosed" value="false" /> Hide
+              </label>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Comments</label>
+            <div class="controls">
+              <label class="radio inline">
+                <input type="radio" name="showIssuesComments" value="true" checked /> Show
+              </label>
+              <label class="radio inline">
+                <input type="radio" name="showIssuesComments" value="false" /> Hide
+              </label>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label">Milestones</label>
+            <div class="controls">
+              <label class="radio inline">
+                <input type="radio" name="showIssuesMilestones" value="true" checked /> Show
+              </label>
+              <label class="radio inline">
+                <input type="radio" name="showIssuesMilestones" value="false" /> Hide
+              </label>
+            </div>
+          </div>
+        </fieldset>
+      </form>
+    </div>
+  </body>
+</html>

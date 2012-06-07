@@ -1,4 +1,3 @@
-
 var GitHub = {
   
   preferences: {
@@ -12,7 +11,11 @@ var GitHub = {
       showIssuesComments: true
       
     },
+    prefixKey: function (key) {
+      return "GitHub_Preferences_" + key;
+    },
     get: function (key, defaultValue) {
+      key = GitHub.preferences.prefixKey(key);
       var value = window.localStorage.getItem(key);
       if (value == undefined) {
         if (defaultValue == undefined && GitHub.preferences.defaults[key] != undefined) {
@@ -22,13 +25,20 @@ var GitHub = {
           return defaultValue;
         }
         GitHub.preferences.set(key, defaultValue);
-        return GitHub.get(key, defaultValue);
+        return GitHub.preferences.get(key, defaultValue);
+      }
+      if (value === "true") {
+        value = true;
+      }
+      else if (value === "false") {
+        value = false;
       }
       return value;
     },
     set: function (key, value) {
-      window.location.removeItem(key);
-      window.location.setItem(key, value);
+      key = GitHub.preferences.prefixKey(key);
+      window.localStorage.removeItem(key);
+      window.localStorage.setItem(key, value);
     }
   },
   
@@ -283,7 +293,7 @@ var GitHub = {
           });
         }
         
-        if (GitHub.prefernces.get("showIssuesComments")) {
+        if (GitHub.preferences.get("showIssuesComments")) {
           $.each(reComment, function (i, el) {
             var numNew = el.comments - el.oldComments;
 
