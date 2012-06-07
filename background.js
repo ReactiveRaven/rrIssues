@@ -1,5 +1,37 @@
 
 var GitHub = {
+  
+  preferences: {
+    defaults: {
+      showGitHubStatus: true,
+      
+      showIssuesLabels: true,
+      showIssuesNew: true,
+      showIssuesClosed: true,
+      showIssuesMilestones: true,
+      showIssuesComments: true
+      
+    },
+    get: function (key, defaultValue) {
+      var value = window.localStorage.getItem(key);
+      if (value == undefined) {
+        if (defaultValue == undefined && GitHub.preferences.defaults[key] != undefined) {
+          defaultValue = GitHub.preferences.defaults[key];
+        }
+        if (defaultValue == undefined) {
+          return defaultValue;
+        }
+        GitHub.preferences.set(key, defaultValue);
+        return GitHub.get(key, defaultValue);
+      }
+      return value;
+    },
+    set: function (key, value) {
+      window.location.removeItem(key);
+      window.location.setItem(key, value);
+    }
+  },
+  
   init: function () {
     $.each(GitHub.checks, function (i, el) {
       if (!el.requires) {
@@ -175,94 +207,150 @@ var GitHub = {
           that.issues[el.id] = el;
         });
         
-        $.each(newIssues, function (i, el) {
-          var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
-          var body = "New issue assigned to you";
-          if (el.comments > 0) {
-            body = "Issue reopened or reassigned to you";
-          }
-          var icon = "images/exclamation_red.png";
+        if (GitHub.preferences.get("showIssuesNew")) {
+          $.each(newIssues, function (i, el) {
+            var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
+            var body = "New issue assigned to you";
+            if (el.comments > 0) {
+              body = "Issue reopened or reassigned to you";
+            }
+            var icon = "images/exclamation_red.png";
 
-          var notification = window.webkitNotifications.createNotification(icon, title, body);
-          notification.onclick = function () {
-            chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number});
-            notification.cancel();
-          }
-          notification.show();
-          notification.ondisplay = function () {
-            setTimeout(function () {
+            var notification = window.webkitNotifications.createNotification(icon, title, body);
+            notification.onclick = function () {
+              chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number});
               notification.cancel();
-            }, 15000);
-          }
-        });
+            }
+            notification.show();
+            notification.ondisplay = function () {
+              setTimeout(function () {
+                notification.cancel();
+              }, 15000);
+            }
+          });
+        }
         
-        $.each(closedIssues, function (i, el) {
-          var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
-          var body = "Issue closed or reassigned";
-          var icon = "images/exclamation_green.png";
+        if (GitHub.preferences.get("showIssuesClosed")) {
+          $.each(closedIssues, function (i, el) {
+            var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
+            var body = "Issue closed or reassigned";
+            var icon = "images/exclamation_green.png";
 
-          var notification = window.webkitNotifications.createNotification(icon, title, body);
-          notification.onclick = function () {
-            chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number});
-            notification.cancel();
-          }
-          notification.show();
-          notification.ondisplay = function () {
-            setTimeout(function () {
+            var notification = window.webkitNotifications.createNotification(icon, title, body);
+            notification.onclick = function () {
+              chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number});
               notification.cancel();
-            }, 15000);
-          }
-        })
+            }
+            notification.show();
+            notification.ondisplay = function () {
+              setTimeout(function () {
+                notification.cancel();
+              }, 15000);
+            }
+          });
+        }
         
-        $.each(reMilestone, function (i, el) {
-          var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
-          var body = "Milestone cleared";
-          var icon = "images/calendar_blue.png";
-          if (el.milestone && el.milestone.title) {
-            title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
-            body = "Moved to milestone '" + el.milestone.title + "'";
-            if (el.milestone.due_on) {
-              var time_until_due = +new Date(el.milestone.due_on) - +new Date();
-              if (time_until_due < 0) {
-                icon = "images/calendar_red.png";
-              } else if (time_until_due < 1000 * 60 * 60 * 24 * 2) {
-                icon = "images/calendar_yellow.png";
-              } else {
-                icon = "images/calendar_green.png";
+        if (GitHub.preferences.get("showIssuesMilestones")) {
+          $.each(reMilestone, function (i, el) {
+            var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
+            var body = "Milestone cleared";
+            var icon = "images/calendar_blue.png";
+            if (el.milestone && el.milestone.title) {
+              title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
+              body = "Moved to milestone '" + el.milestone.title + "'";
+              if (el.milestone.due_on) {
+                var time_until_due = +new Date(el.milestone.due_on) - +new Date();
+                if (time_until_due < 0) {
+                  icon = "images/calendar_red.png";
+                } else if (time_until_due < 1000 * 60 * 60 * 24 * 2) {
+                  icon = "images/calendar_yellow.png";
+                } else {
+                  icon = "images/calendar_green.png";
+                }
               }
             }
-          }
-          var notification = window.webkitNotifications.createNotification(icon, title, body);
-          notification.onclick = function () { 
-            chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number});
-            notification.cancel();
-          }
-          notification.ondisplay = function () {
-            setTimeout(function () {
+            var notification = window.webkitNotifications.createNotification(icon, title, body);
+            notification.onclick = function () { 
+              chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number});
               notification.cancel();
-            }, 15 * 1000);
-          }
-          notification.show();
-        });
+            }
+            notification.ondisplay = function () {
+              setTimeout(function () {
+                notification.cancel();
+              }, 15 * 1000);
+            }
+            notification.show();
+          });
+        }
         
-        $.each(reComment, function (i, el) {
-          var numNew = el.comments - el.oldComments;
-          
-          $.ajax({
-            url: el.url + "/comments",
-            data: {
-              access_token: GitHub.checks.oauth.connection.getAccessToken(),
-              per_page: 100
-            },
-            success: function (data) {
-              $.each(data.slice(-numNew), function (j, comment) {
+        if (GitHub.prefernces.get("showIssuesComments")) {
+          $.each(reComment, function (i, el) {
+            var numNew = el.comments - el.oldComments;
+
+            $.ajax({
+              url: el.url + "/comments",
+              data: {
+                access_token: GitHub.checks.oauth.connection.getAccessToken(),
+                per_page: 100
+              },
+              success: function (data) {
+                $.each(data.slice(-numNew), function (j, comment) {
+                  var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
+                  var body = "@" + comment.user.login + " said: " + comment.body;
+                  var icon = comment.user.avatar_url;
+
+                  var notification = window.webkitNotifications.createNotification(icon, title, body);
+                  notification.onclick = function () { 
+                    chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number + "#issuecomment-" + comment.id});
+                    notification.cancel();
+                  }
+                  notification.ondisplay = function () {
+                    setTimeout(function () {
+                      notification.cancel();
+                    }, 15 * 1000);
+                  }
+                  notification.show();
+                });
+              }
+            });
+
+          });
+        }
+        
+        if (GitHub.preferences.get("showIssuesLabels")) {
+          $.each(reTag, function (i, el) {
+            var oldLabelNames = $.map(el.oldLabels, function (item) {
+              return item.name;
+            });
+            var newLabelNames = $.map(el.labels, function (item) {
+              return item.name;
+            });
+
+            var tagDiff = (
+              $.grep(
+                oldLabelNames, 
+                function (item) {
+                  return $.inArray(item, newLabelNames) < 0;
+                }
+              ).concat(
+                $.grep(
+                  newLabelNames, 
+                  function (item) { 
+                    return $.inArray(item, oldLabelNames) < 0;
+                  }
+                )
+              )
+            );
+
+            $.each(el.labels, function (i, label) {
+              if ($.inArray(label.name, tagDiff) >= 0) {
                 var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
-                var body = "@" + comment.user.login + " said: " + comment.body;
-                var icon = comment.user.avatar_url;
-                
+                var body = "ADDED '" + label.name + "'";
+                var icon = "images/tag_" + GitHub.classifyColour(label.color) + ".png";
+
                 var notification = window.webkitNotifications.createNotification(icon, title, body);
                 notification.onclick = function () { 
-                  chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number + "#issuecomment-" + comment.id});
+                  chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number});
                   notification.cancel();
                 }
                 notification.ondisplay = function () {
@@ -271,76 +359,30 @@ var GitHub = {
                   }, 15 * 1000);
                 }
                 notification.show();
-              });
-            }
-          });
-          
-        });
-        
-        $.each(reTag, function (i, el) {
-          var oldLabelNames = $.map(el.oldLabels, function (item) {
-            return item.name;
-          });
-          var newLabelNames = $.map(el.labels, function (item) {
-            return item.name;
-          });
-          
-          var tagDiff = (
-            $.grep(
-              oldLabelNames, 
-              function (item) {
-                return $.inArray(item, newLabelNames) < 0;
               }
-            ).concat(
-              $.grep(
-                newLabelNames, 
-                function (item) { 
-                  return $.inArray(item, oldLabelNames) < 0;
+            })
+
+            $.each(el.oldLabels, function (i, label) {
+              if ($.inArray(label.name, tagDiff) >= 0) {
+                var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
+                var body = "REMOVED '" + label.name + "'";
+                var icon = "images/tag_" + GitHub.classifyColour(label.color) + ".png";
+
+                var notification = window.webkitNotifications.createNotification(icon, title, body);
+                notification.onclick = function () { 
+                  chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number});
+                  notification.cancel();
                 }
-              )
-            )
-          );
-          
-          $.each(el.labels, function (i, label) {
-            if ($.inArray(label.name, tagDiff) >= 0) {
-              var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
-              var body = "ADDED '" + label.name + "'";
-              var icon = "images/tag_" + GitHub.classifyColour(label.color) + ".png";
-              
-              var notification = window.webkitNotifications.createNotification(icon, title, body);
-              notification.onclick = function () { 
-                chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number});
-                notification.cancel();
+                notification.ondisplay = function () {
+                  setTimeout(function () {
+                    notification.cancel();
+                  }, 15 * 1000);
+                }
+                notification.show();
               }
-              notification.ondisplay = function () {
-                setTimeout(function () {
-                  notification.cancel();
-                }, 15 * 1000);
-              }
-              notification.show();
-            }
-          })
-          
-          $.each(el.oldLabels, function (i, label) {
-            if ($.inArray(label.name, tagDiff) >= 0) {
-              var title = "[" + el.repository.name + "] #" + el.number + " " + el.title;
-              var body = "REMOVED '" + label.name + "'";
-              var icon = "images/tag_" + GitHub.classifyColour(label.color) + ".png";
-              
-              var notification = window.webkitNotifications.createNotification(icon, title, body);
-              notification.onclick = function () { 
-                chrome.tabs.create({url: el.repository.html_url + "/issues/" + el.number});
-                notification.cancel();
-              }
-              notification.ondisplay = function () {
-                setTimeout(function () {
-                  notification.cancel();
-                }, 15 * 1000);
-              }
-              notification.show();
-            }
-          })
-        });
+            })
+          });
+        }
         
         that.firstRun = false;
       },
@@ -369,40 +411,42 @@ var GitHub = {
       lastString: "",
       run: function () {
         var that = GitHub.checks.status;
-        $.ajax({
-          url: "https://status.github.com/status.json", 
-          success: function (data) {
-            var json = JSON.parse(data);
-            if (that.lastString != json.status) {
-              if (that.lastNotification) {
-                that.lastNotification.cancel();
-              }
-              
-              var lastLastString = that.lastString;
-              that.lastString = json.status;
-              
-              var icon = "images/trafficlight_red.png";
-              if (json.status == "minorproblem") {
-                icon = "images/trafficlight_yellow.png";
-              }
-              if (json.status == "good") {
-                icon = "images/trafficlight_green.png";
-              }
-              
-              if (lastLastString.length) {
-                that.lastNotification = window.webkitNotifications.createNotification(icon, "GitHub status changed", "Status is now '" + json.status + "'")
-                that.lastNotification.show();
-              } else if (json.status != "good") {
-                that.lastNotification = window.webkitNotifications.createNotification(icon, "GitHub is unwell", "Status is currently '" + json.status + "'");
-              }
-              
-              if (that.lastNotification) {
-                that.lastNotification.onclick = function () {chrome.tabs.create({url: "http://status.github.com"});that.lastNotification.cancel();};
-                that.lastNotification.show();
+        if (GitHub.preferences.get("showStatus", true)) {
+          $.ajax({
+            url: "https://status.github.com/status.json", 
+            success: function (data) {
+              var json = JSON.parse(data);
+              if (that.lastString != json.status) {
+                if (that.lastNotification) {
+                  that.lastNotification.cancel();
+                }
+
+                var lastLastString = that.lastString;
+                that.lastString = json.status;
+
+                var icon = "images/trafficlight_red.png";
+                if (json.status == "minorproblem") {
+                  icon = "images/trafficlight_yellow.png";
+                }
+                if (json.status == "good") {
+                  icon = "images/trafficlight_green.png";
+                }
+
+                if (lastLastString.length) {
+                  that.lastNotification = window.webkitNotifications.createNotification(icon, "GitHub status changed", "Status is now '" + json.status + "'")
+                  that.lastNotification.show();
+                } else if (json.status != "good") {
+                  that.lastNotification = window.webkitNotifications.createNotification(icon, "GitHub is unwell", "Status is currently '" + json.status + "'");
+                }
+
+                if (that.lastNotification) {
+                  that.lastNotification.onclick = function () {chrome.tabs.create({url: "http://status.github.com"});that.lastNotification.cancel();};
+                  that.lastNotification.show();
+                }
               }
             }
-          }
-        });
+          });
+        }
       }
     }
     
