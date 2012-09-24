@@ -15,8 +15,7 @@ var GitHub = {
       return "GitHub_Preferences_" + key;
     },
     get: function (key, defaultValue) {
-      key = GitHub.preferences.prefixKey(key);
-      var value = window.localStorage.getItem(key);
+      var value = window.localStorage.getItem(GitHub.preferences.prefixKey(key));
       if (value == undefined) {
         if (defaultValue == undefined && GitHub.preferences.defaults[key] != undefined) {
           defaultValue = GitHub.preferences.defaults[key];
@@ -24,8 +23,8 @@ var GitHub = {
         if (defaultValue == undefined) {
           return defaultValue;
         }
-        GitHub.preferences.set(key, defaultValue);
-        return GitHub.preferences.get(key, defaultValue);
+        GitHub.preferences.set(GitHub.preferences.prefixKey(key), defaultValue);
+        return GitHub.preferences.get(GitHub.preferences.prefixKey(key), defaultValue);
       }
       if (value === "true") {
         value = true;
